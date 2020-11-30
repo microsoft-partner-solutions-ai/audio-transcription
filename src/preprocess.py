@@ -1,5 +1,5 @@
 import re, sys
-import inflect 
+from num2words import num2words
 
 def remove_punctuation(text):
         # punctuation characters to remove
@@ -11,6 +11,27 @@ def remove_punctuation(text):
                 if char == '-':
                         text = text.replace(char, ' ')
         return text
+
+def is_ordinal(token):
+        ordinal = False
+        if token.endswith("th"):
+                prefix = token.split("th")[0]
+                if prefix.isnumeric():
+                        ordinal = True
+        return ordinal
+
+def spell_numbers(text):
+        tokens = text.split()
+        for token in tokens: 
+                if token.isnumeric():
+                        number = remove_punctuation(num2words(token))
+                        text = text.replace(token, number)
+                elif is_ordinal(token):
+                        prefix = token.split("th")[0]
+                        number = remove_punctuation(num2words(prefix, to='ordinal')) 
+                        text = text.replace(token, number)
+        return text
+
 
 def main(args):
         # parse arguments
@@ -50,12 +71,7 @@ def main(args):
                 line = remove_punctuation(line)
 
                 # spell out the numbers using inflect package
-                p = inflect.engine()
-                tokens = line.split()
-                for token in tokens: 
-                        if token.isnumeric():
-                                number = remove_punctuation(p.number_to_words(token))
-                                line = line.replace(token, number)
+                line = spell_numbers(line)
 
                 # append non-empty lines to list of all lines
                 if line:
