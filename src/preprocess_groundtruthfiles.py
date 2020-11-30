@@ -1,46 +1,75 @@
-import csv
-import sys
-import pandas as pd
-import re
+import re, sys
+import inflect 
 
-# open and read lines from file
-txtfile = r"C:\Users\dthakar\Desktop\GroundTruthTXTFiles\Ground truth_Assault of Domino’s Delivery Driver - Seattle PD.txt"
-file = open(txtfile,'r')
-text = file.readlines()
+def remove_punctuation(text):
+        # punctuation characters to remove
+        punc = '''!()[]{};:"\,<>./?@#$%^&*_~'''
 
-# regex to remove all content before the utterance for each line 
-regex_rem_speaker_time = r'(^[^:\r\n]+:[ \t]*)+(.*[0-9]:[0-9][0-9])+([ \t]*)'
-subst_speaker_time = ""
+        for char in text:
+                if char in punc:
+                        text = text.replace(char, '')
+                if char == '-':
+                        text = text.replace(char, ' ')
+        return text
 
-# regex to remove repeating characters more than four times 
-regex_repeat_char = r'(.)\1+'
-subst_repear_char = "\\1\\1"
+def main(args):
+        # parse arguments
+        in_file = open(args[0], 'r')
+        out_file = open(args[1], 'w')
 
-# punctuation characters to remove
-punc = '''!()-[]{};:'"\, <>./?@#$%^&*_~'''
+        text = in_file.readlines()
 
-# list to store the utterances 
-txt = []
+        # regex to remove all content before the utterance for each line 
+        regex_rem_speaker_time = r'(^[^:\r\n]+:[ \t]*)+(.*[0-9]:[0-9][0-9])+([ \t]*)'
+        subst_speaker_time = ""
 
-for test_str in text:
-        # print(re.sub(regex, subst, test_str))
+        # regex to remove repeating characters more than four times 
+        regex_repeat_char = r'(.)\1+'
+        subst_repear_char = "\\1\\1"
 
-        # lowercase
-        test_str = test_str.lower()
-        # replace new line with empty space
-        test_str = test_str.replace('\n','')
-        # get rid of punctuation
+        # list to store the utterances 
+        txt = []
 
-        # avoid repeating characters more than 4 times
+        for line in text:
+                # remove speakers and timestamps
+                line = re.sub(regex_rem_speaker_time, subst_speaker_time, line)
 
-        # avoid repeating words more than 4 times 
+                # lowercase
+                line = line.lower()
 
-        #removing the [inaudible] comments
+                # replace new line with empty space
+                line = ' '.join(line.split())
 
-        #spell out the numbers - inflect package 
+                # avoid repeating characters more than 4 times
 
-        # substitute regex match with empty space for all lines in text file
-        txt.append(re.sub(regex_rem_speaker_time, subst_speaker_time, test_str))
-print(txt)
+                # avoid repeating words more than 4 times 
 
+                # removing the [inaudible] comments
 
+                # remove punctuation
+                line = remove_punctuation(line)
+
+                # spell out the numbers using inflect package
+                p = inflect.engine()
+                tokens = line.split()
+                for token in tokens: 
+                        if token.isnumeric():
+                                number = remove_punctuation(p.number_to_words(token))
+                                line = line.replace(token, number)
+
+                # append non-empty lines to list of all lines
+                if line:
+                        txt.append(line)
+
+        # join list of text into single string
+        txt = ' '.join(txt)
+
+        # save output
+        out_file.write(txt)
+
+        # close files
+        in_file.close()
+        out_file.close()
+
+if __name__ == "__main__":
+        main(sys.argv[1:])
