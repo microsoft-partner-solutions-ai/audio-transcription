@@ -1,4 +1,13 @@
-import re, sys
+"""
+Usage: python preprocess.py <input_directory> <output_directory> 
+Example: python preprocess.py data/raw data/preprocessed
+Parameters: 
+    <input_directory>: path to ground truth .txt files 
+    <output_directory>: path to save the output preprocessed .txt files
+Output: text that has been lowercased, stripped of punctuation other than apostrophes, stripped of 4 or more repeating characters and words in a row, and numbers spelled out
+"""
+
+import re, sys, os, glob
 from num2words import num2words
 
 def remove_punctuation(text):
@@ -32,11 +41,9 @@ def spell_numbers(text):
                         text = text.replace(token, number)
         return text
 
-
-def main(args):
-        # parse arguments
-        in_file = open(args[0], 'r')
-        out_file = open(args[1], 'w')
+def preprocess_text_file(in_file_path, out_file_path):
+        in_file = open(in_file_path, 'r')
+        out_file = open(out_file_path, 'w')
 
         text = in_file.readlines()
 
@@ -87,7 +94,7 @@ def main(args):
                 # remove punctuation
                 line = remove_punctuation(line)
 
-                # spell out the numbers using inflect package
+                # spell out the numbers 
                 line = spell_numbers(line)
 
                 # append non-empty lines to list of all lines
@@ -109,6 +116,22 @@ def main(args):
         # close files
         in_file.close()
         out_file.close()
+
+def main(args):
+        # parse arguments
+        in_dir = args[0]
+        out_dir = args[1]
+
+        # create output directory if it doesn't exist
+        if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+        
+        # get all text filenames
+        filenames = glob.glob(os.path.join(in_dir, '*.txt'))
+
+        # preprocess each file 
+        for filename in filenames:
+                preprocess_text_file(filename, os.path.join(out_dir,filename.split('/')[-1]))
 
 if __name__ == "__main__":
         main(sys.argv[1:])
