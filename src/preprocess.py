@@ -45,7 +45,7 @@ def main(args):
         subst_speaker_time = ""
 
         # regex to remove repeating characters more than four times 
-        regex_repeat_char = r'(.)\1+'
+        regex_repeat_char = r'(.)\1{3,}'
         subst_repeat_char = "\\1\\1\\1"
 
         # regex to remove repeating words more than four times
