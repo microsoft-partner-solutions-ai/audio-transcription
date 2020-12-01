@@ -111,6 +111,7 @@ def preprocess_text_file(in_file_path, out_file_path):
         txt = re.sub(regex_repeat_char, subst_repeat_char, txt, re.MULTILINE)
 
         # save output
+        out_file.write(in_file_path.split('/')[-1]+'\t') # prepend audio filename + tab to output text file
         out_file.write(txt)
 
         # close files
